@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Age Calculator</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .calculator-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 350px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .result {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .result h2 {
+            color: #2c3e50;
+            font-size: 18px;
+            margin-top: 0;
+        }
+        
+        .result p {
+            font-size: 16px;
+            color: #34495e;
+            margin: 8px 0;
+        }
+        
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+            font-size: 14px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator-container">
+        <h1>Age Calculator</h1>
+        
+        <div class="input-group">
+            <label for="day">Day</label>
+            <input type="number" id="day" placeholder="DD" min="1" max="31">
+        </div>
+        
+        <div class="input-group">
+            <label for="month">Month</label>
+            <input type="number" id="month" placeholder="MM" min="1" max="12">
+        </div>
+        
+        <div class="input-group">
+            <label for="year">Year</label>
+            <input type="number" id="year" placeholder="YYYY" min="1900">
+        </div>
+        
+        <button id="calculate-btn">Calculate Age</button>
+        
+        <div class="error" id="error-message"></div>
+        
+        <div class="result" id="result">
+            <h2>Your Age</h2>
+            <p id="years">Years: 0</p>
+            <p id="months">Months: 0</p>
+            <p id="days">Days: 0</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const calculateBtn = document.getElementById('calculate-btn');
+            const dayInput = document.getElementById('day');
+            const monthInput = document.getElementById('month');
+            const yearInput = document.getElementById('year');
+            const resultDiv = document.getElementById('result');
+            const errorMessage = document.getElementById('error-message');
+            
+            calculateBtn.addEventListener('click', calculateAge);
+            
+            function calculateAge() {
+                // Hide previous results/errors
+                resultDiv.style.display = 'none';
+                errorMessage.style.display = 'none';
+                
+                // Get input values
+                const day = parseInt(dayInput.value);
+                const month = parseInt(monthInput.value);
+                const year = parseInt(yearInput.value);
+                
+                // Validate inputs
+                if (!day || !month || !year) {
+                    showError('Please fill in all fields');
+                    return;
+                }
+                
+                if (day < 1 || day > 31) {
+                    showError('Please enter a valid day (1-31)');
+                    return;
+                }
+                
+                if (month < 1 || month > 12) {
+                    showError('Please enter a valid month (1-12)');
+                    return;
+                }
+                
+                const currentDate = new Date();
+                const currentYear = currentDate.getFullYear();
+                
+                if (year > currentYear) {
+                    showError('Birth year cannot be in the future');
+                    return;
+                }
+                
+                // Validate the date (e.g., not Feb 30)
+                const birthDate = new Date(year, month - 1, day);
+                if (birthDate.getDate() !== day || 
+                    birthDate.getMonth() !== month - 1 || 
+                    birthDate.getFullYear() !== year) {
+                    showError('Please enter a valid date');
+                    return;
+                }
+                
+                // Calculate age
+                const age = getAge(birthDate);
+                
+                // Display results
+                document.getElementById('years').textContent = `Years: ${age.years}`;
+                document.getElementById('months').textContent = `Months: ${age.months}`;
+                document.getElementById('days').textContent = `Days: ${age.days}`;
+                
+                resultDiv.style.display = 'block';
+            }
+            
+            function getAge(birthDate) {
+                const today = new Date();
+                let years = today.getFullYear() - birthDate.getFullYear();
+                let months = today.getMonth() - birthDate.getMonth();
+                let days = today.getDate() - birthDate.getDate();
+                
+                // Adjust for negative months or days
+                if (days < 0) {
+                    months--;
+                    // Get the last day of the previous month
+                    const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+                    days += lastMonth.getDate();
+                }
+                
+                if (months < 0) {
+                    years--;
+                    months += 12;
+                }
+                
+                return { years, months, days };
+            }
+            
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
